@@ -3,18 +3,18 @@ set -euo pipefail
 
 # ------------------------------------------------------------
 # codex-update
-# - vergleicht installierte codex-Version mit npm latest
-# - fragt bei Update nach (y/n)
-# - mit -y wird direkt aktualisiert
+# - compares installed codex version with npm latest
+# - asks before updating (y/n)
+# - updates directly with -y
 # ------------------------------------------------------------
 
 usage() {
   cat <<'EOF'
 Usage: codex-update [-y]
 
-Optionen:
-  -y            Update ohne Rückfrage installieren
-  -h, --help    Hilfe anzeigen
+Options:
+  -y            Install update without confirmation
+  -h, --help    Show help
 EOF
 }
 
@@ -27,31 +27,31 @@ case "${1:-}" in
     ;;
   "" ) ;;
   * )
-    echo "Unbekanntes Argument: $1" >&2
+    echo "Unknown argument: $1" >&2
     usage >&2
     exit 2
     ;;
 esac
 
 die() {
-  echo "Fehler: $1" >&2
+  echo "Error: $1" >&2
   exit 2
 }
 
 need_cmd() {
-  command -v "$1" >/dev/null 2>&1 || die "$1 nicht gefunden"
+  command -v "$1" >/dev/null 2>&1 || die "$1 not found"
 }
 
 get_semver() {
-  # Nimmt die erste x.y.z aus einem String.
-  # Beispiel: "codex 0.99.0" -> "0.99.0"
+  # Extracts the first x.y.z from a string.
+  # Example: "codex 0.99.0" -> "0.99.0"
   echo "$1" | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' | head -n1
 }
 
 do_update() {
-  echo "Installiere Update: npm i -g @openai/codex"
+  echo "Installing update: npm i -g @openai/codex"
   npm i -g @openai/codex
-  echo "Neue Version: $(codex --version)"
+  echo "New version: $(codex --version)"
 }
 
 need_cmd codex
@@ -66,39 +66,39 @@ latest_raw="$(npm view @openai/codex version)"
 installed="$(get_semver "$installed_raw")"
 latest="$(echo "$latest_raw" | tr -d '[:space:]')"
 
-[[ -n "$installed" ]] || die "Konnte installierte Version nicht parsen: $installed_raw"
-[[ -n "$latest" ]] || die "Konnte latest Version nicht ermitteln"
+[[ -n "$installed" ]] || die "Could not parse installed version: $installed_raw"
+[[ -n "$latest" ]] || die "Could not determine latest version"
 
 echo "installed: $installed"
 echo "latest:    $latest"
 
 autoload -Uz is-at-least
 
-# is-at-least MIN CURRENT -> true, wenn CURRENT >= MIN
+# is-at-least MIN CURRENT -> true when CURRENT >= MIN
 if is-at-least "$latest" "$installed"; then
   echo "Up to date."
   exit 0
 fi
 
-echo "Update verfügbar."
+echo "Update available."
 
 if [[ "$auto_yes" -eq 1 ]]; then
   do_update
   exit 0
 fi
 
-[[ -t 0 ]] || die "Kein interaktives Terminal. Für ein automatisches Update bitte -y verwenden."
+[[ -t 0 ]] || die "No interactive terminal. Use -y for automatic update."
 
-printf "Update installieren? (y/n) "
+printf "Install update? (y/n) "
 read -r ans
 case "${ans:l}" in
   y|yes) do_update ;;
   n|no)
-    echo "Abgebrochen."
+    echo "Canceled."
     exit 1
     ;;
   *)
-    echo "Bitte y oder n."
+    echo "Please answer y or n."
     exit 1
     ;;
 esac
