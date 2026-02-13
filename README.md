@@ -70,6 +70,28 @@ source "$HOME/.zshrc"
 codex-update --help
 ```
 
+## Skript aktualisieren
+
+Wenn `codex-update` bereits in `~/bin` installiert ist:
+
+1. Neueste Version aus GitHub laden:
+
+```bash
+curl -fsSL "https://raw.githubusercontent.com/lasseveenliese/codex-update/main/codex-update" -o "$HOME/bin/codex-update"
+```
+
+2. Ausführbar machen:
+
+```bash
+chmod +x "$HOME/bin/codex-update"
+```
+
+3. Aktualisierung prüfen:
+
+```bash
+codex-update --help
+```
+
 ## Ablauf des Skripts
 
 1. Prüft benötigte Tools (`codex`, `npm`, `grep`, `head`, `tr`)
