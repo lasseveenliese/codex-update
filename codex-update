@@ -13,7 +13,7 @@ usage() {
 Usage: codex-update [-y]
 
 Optionen:
-  -y            Update ohne Rueckfrage installieren
+  -y            Update ohne Rückfrage installieren
   -h, --help    Hilfe anzeigen
 EOF
 }
@@ -80,14 +80,14 @@ if is-at-least "$latest" "$installed"; then
   exit 0
 fi
 
-echo "Update verfuegbar."
+echo "Update verfügbar."
 
 if [[ "$auto_yes" -eq 1 ]]; then
   do_update
   exit 0
 fi
 
-[[ -t 0 ]] || die "Kein interaktives Terminal. Fuer ein automatisches Update bitte -y verwenden."
+[[ -t 0 ]] || die "Kein interaktives Terminal. Für ein automatisches Update bitte -y verwenden."
 
 printf "Update installieren? (y/n) "
 read -r ans
