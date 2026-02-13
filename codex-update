@@ -1,0 +1,104 @@
+#!/bin/zsh
+set -euo pipefail
+
+# ------------------------------------------------------------
+# codex-update
+# - vergleicht installierte codex-Version mit npm latest
+# - fragt bei Update nach (y/n)
+# - mit -y wird direkt aktualisiert
+# ------------------------------------------------------------
+
+usage() {
+  cat <<'EOF'
+Usage: codex-update [-y]
+
+Optionen:
+  -y            Update ohne Rueckfrage installieren
+  -h, --help    Hilfe anzeigen
+EOF
+}
+
+auto_yes=0
+case "${1:-}" in
+  -y) auto_yes=1 ;;
+  -h|--help)
+    usage
+    exit 0
+    ;;
+  "" ) ;;
+  * )
+    echo "Unbekanntes Argument: $1" >&2
+    usage >&2
+    exit 2
+    ;;
+esac
+
+die() {
+  echo "Fehler: $1" >&2
+  exit 2
+}
+
+need_cmd() {
+  command -v "$1" >/dev/null 2>&1 || die "$1 nicht gefunden"
+}
+
+get_semver() {
+  # Nimmt die erste x.y.z aus einem String.
+  # Beispiel: "codex 0.99.0" -> "0.99.0"
+  echo "$1" | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' | head -n1
+}
+
+do_update() {
+  echo "Installiere Update: npm i -g @openai/codex"
+  npm i -g @openai/codex
+  echo "Neue Version: $(codex --version)"
+}
+
+need_cmd codex
+need_cmd npm
+need_cmd grep
+need_cmd head
+need_cmd tr
+
+installed_raw="$(codex --version)"
+latest_raw="$(npm view @openai/codex version)"
+
+installed="$(get_semver "$installed_raw")"
+latest="$(echo "$latest_raw" | tr -d '[:space:]')"
+
+[[ -n "$installed" ]] || die "Konnte installierte Version nicht parsen: $installed_raw"
+[[ -n "$latest" ]] || die "Konnte latest Version nicht ermitteln"
+
+echo "installed: $installed"
+echo "latest:    $latest"
+
+autoload -Uz is-at-least
+
+# is-at-least MIN CURRENT -> true, wenn CURRENT >= MIN
+if is-at-least "$latest" "$installed"; then
+  echo "Up to date."
+  exit 0
+fi
+
+echo "Update verfuegbar."
+
+if [[ "$auto_yes" -eq 1 ]]; then
+  do_update
+  exit 0
+fi
+
+[[ -t 0 ]] || die "Kein interaktives Terminal. Fuer ein automatisches Update bitte -y verwenden."
+
+printf "Update installieren? (y/n) "
+read -r ans
+case "${ans:l}" in
+  y|yes) do_update ;;
+  n|no)
+    echo "Abgebrochen."
+    exit 1
+    ;;
+  *)
+    echo "Bitte y oder n."
+    exit 1
+    ;;
+esac
